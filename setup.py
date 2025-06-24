@@ -10,7 +10,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='paramiko-mock',
-    version='1.0.0',
+    version='1.0.1',
     description='Mock for paramiko library',
     author='Caio Cominato',
     author_email='caiopetrellicominato@gmail.com',
