@@ -1,8 +1,7 @@
 import paramiko
-from io import StringIO
 from src.ParamikoMock.mocked_env import ParamikoMockEnviron
-from src.ParamikoMock.ssh_mock import SSHClientMock, SSHCommandMock, SSHCommandFunctionMock
-from src.ParamikoMock.sftp_mock import SFTPClientMock, SFTPFileMock 
+from src.ParamikoMock.ssh_mock import SSHClientMock
+from src.ParamikoMock.sftp_mock import SFTPFileMock 
 from src.ParamikoMock.local_filesystem_mock import LocalFileMock
 from unittest.mock import patch
 
@@ -72,6 +71,23 @@ def example_function_sftp_get():
     sftp.get('/remote/path/to/file_b.txt', '/local/path/to/file_b.txt')
     sftp.close()
 
+
+def example_function_sftp_list():
+    client = paramiko.SSHClient()
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # Some example of connection
+    client.connect('some_host_4',
+                    port=22,
+                    username='root',
+                    password='root',
+                    banner_timeout=10)
+    # Some example of a remote file write
+    sftp = client.open_sftp()
+    outut = sftp.listdir('directory_1')
+    sftp.close()
+    return outut
+
 # Actual tests
 # -- This ensures that the ParamikoMock is working as expected
 def test_example_function_sftp_write():
@@ -132,4 +148,19 @@ def test_example_function_sftp_get():
         mock_local_file = ParamikoMockEnviron().get_local_file("/local/path/to/file_b.txt")
         # Check if the content is the same as the one written
         assert 'Content of the remote file' == mock_local_file.file_content
+    ParamikoMockEnviron().cleanup_environment()
+
+def test_example_function_sftp_list():
+
+    ParamikoMockEnviron().add_responses_for_host('some_host_4', 22, {}, 'root', 'root')
+
+    files = ["file-a.txt", "directory_1/file-b.txt", "directory_1/file-c.txt"]
+    for file in files:
+        ParamikoMockEnviron().add_mock_file_for_host('some_host_4', 22, file, LocalFileMock())
+
+    with patch('paramiko.SSHClient', new=SSHClientMock): 
+        file_list = example_function_sftp_list()
+
+        assert file_list == ["file-b.txt", "file-c.txt"]
+
     ParamikoMockEnviron().cleanup_environment()

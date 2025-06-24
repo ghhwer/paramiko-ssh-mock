@@ -1,5 +1,6 @@
 import time
 import os
+from pathlib import Path
 from paramiko import SFTPAttributes
 from .local_filesystem_mock import LocalFileMock, LocalFilesystemMock
 from .exceptions import BadSetupError
@@ -20,6 +21,9 @@ class SFTPFileSystem():
     
     def remove_file(self, path):
         self.file_system.pop(path, None)
+
+    def list_files(self):
+        return self.file_system.keys()
 
 class SFTPFileMock():
     """
@@ -104,3 +108,7 @@ class SFTPClientMock():
         local_file.file_content = file.file_content
         self.__local_filesystem__.add_file(localpath, local_file)
     
+    def listdir(self, path="."):
+        file_path = Path(path)
+        file_list = [Path(x) for x in self.__remote_file_system__.list_files()]
+        return [x.name for x in file_list if x.parent == file_path]
