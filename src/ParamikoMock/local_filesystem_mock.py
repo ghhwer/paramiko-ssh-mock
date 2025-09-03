@@ -25,3 +25,9 @@ class LocalFileMock():
     write_history = []
     file_content = None
 
+    def write(self, data):
+        self.write_history.append(data)
+        if self.file_content is None:
+            self.file_content = data
+        else:
+            self.file_content += data

@@ -65,18 +65,27 @@ class SFTPClientMock():
     def close(self):
         pass
 
-    def put(self, localpath, remotepath, callback=None, confirm=True):
-        # Check if localpath exists
+    def put(self, localpath, remotepath, callback=None, prefetch=True, max_concurrent_prefetch_requests=None, confirm=True):
         mock_local_file = self.__local_filesystem__.get_file(localpath)
         if mock_local_file is None:
             raise FileNotFoundError(f"File not found: {localpath}")
-        sftp_file_mock = SFTPFileMock()
-        sftp_file_mock.file_content = mock_local_file.file_content
-        self.__remote_file_system__.add_file(remotepath, sftp_file_mock)
-        # Write the content to the remote filesystem
-        size = len(sftp_file_mock.file_content)
         
-        # Creating a fake os.stat_result object
+        file_content = mock_local_file.file_content
+        size = len(file_content)
+        
+        sftp_file_mock = SFTPFileMock()
+        self.__remote_file_system__.add_file(remotepath, sftp_file_mock)
+        
+        chunk_size = 32768  # Typical SFTP chunk size
+        transferred = 0
+        
+        for i in range(0, size, chunk_size):
+            chunk = file_content[i:i+chunk_size]
+            sftp_file_mock.write(chunk)
+            transferred += len(chunk)
+            if callback:
+                callback(transferred, size)
+        
         fake_stat = os.stat_result((
             33206,   # st_mode (file mode)
             1234567, # st_ino (inode number)
@@ -89,24 +98,36 @@ class SFTPClientMock():
             int(time.time()),  # st_mtime (last modification time)
             int(time.time())   # st_ctime (creation time on Windows, metadata change on Unix)
         ))
+        
         if confirm:
             s = SFTPAttributes.from_stat(fake_stat)
             if s.st_size != size:
-                raise IOError(
-                    "size mismatch in put!  {} != {}".format(s.st_size, size)
-                )
+                raise IOError(f"size mismatch in put! {s.st_size} != {size}")
         else:
             s = SFTPAttributes()
+        
         return s
 
-    def get(self, remotepath, localpath, callback=None):
+    def get(self, remotepath, localpath, callback=None, prefetch=True, max_concurrent_prefetch_requests=None):
         file = self.__remote_file_system__.get_file(remotepath)
         if file is None:
             raise FileNotFoundError(f"File not found: {remotepath}")
-        # Write the content to the local filesystem
+        
+        file_content = file.file_content
+        size = len(file_content)
+        
         local_file = LocalFileMock()
-        local_file.file_content = file.file_content
         self.__local_filesystem__.add_file(localpath, local_file)
+        
+        chunk_size = 32768  # Typical SFTP chunk size
+        transferred = 0
+        
+        for i in range(0, size, chunk_size):
+            chunk = file_content[i:i+chunk_size]
+            local_file.write(chunk)
+            transferred += len(chunk)
+            if callback:
+                callback(transferred, size)
     
     def listdir(self, path="."):
         file_path = Path(path)
