@@ -14,9 +14,6 @@ class SSHClientMock():
         self.device = None
         self.sftp_client_mock = None
     
-    def load_system_host_keys(self):
-        pass
-    
     def set_missing_host_key_policy(self, policy):
         pass
 
