@@ -1,8 +1,8 @@
 import paramiko
 from src.ParamikoMock.mocked_env import ParamikoMockEnviron
 from src.ParamikoMock.ssh_mock import SSHClientMock
-from src.ParamikoMock.sftp_mock import SFTPFileMock 
-from src.ParamikoMock.local_filesystem_mock import LocalFileMock
+from src.ParamikoMock.sftp_mock import SFTPFileSystem, SFTPClientMock, SFTPFileMock 
+from src.ParamikoMock.local_filesystem_mock import LocalFilesystemMock, LocalFileMock
 from unittest.mock import patch
 
 # Functions below are examples of what an application could look like
@@ -164,3 +164,43 @@ def test_example_function_sftp_list():
         assert file_list == ["file-b.txt", "file-c.txt"]
 
     ParamikoMockEnviron().cleanup_environment()
+
+def test_sftp_put_callback():
+    file_system = SFTPFileSystem()
+    local_filesystem = LocalFilesystemMock()
+    sftp_client = SFTPClientMock(file_system, local_filesystem)
+
+    mock_local_file = LocalFileMock()
+    mock_local_file.file_content = b'x' * 40000  # 40000 bytes file
+    local_filesystem.add_file("/local/testfile.txt", mock_local_file)
+
+    callback_progress = []
+    def callback(transferred, total):
+        callback_progress.append((transferred, total))
+
+    sftp_client.put('/local/testfile.txt', '/remote/testfile.txt', callback=callback)
+
+    assert len(callback_progress) > 1
+    assert callback_progress[0][0] == 32768  # First chunk
+    assert callback_progress[-1][0] == 40000  # Total file size
+    assert all(x[1] == 40000 for x in callback_progress)
+
+def test_sftp_get_callback():
+    file_system = SFTPFileSystem()
+    local_filesystem = LocalFilesystemMock()
+    sftp_client = SFTPClientMock(file_system, local_filesystem)
+
+    mock_file = SFTPFileMock()
+    mock_file.file_content = b'x' * 40000  # 40000 bytes file
+    file_system.add_file('/remote/testfile.txt', mock_file)
+
+    callback_progress = []
+    def callback(transferred, total):
+        callback_progress.append((transferred, total))
+
+    sftp_client.get('/remote/testfile.txt', '/local/testfile.txt', callback=callback)
+
+    assert len(callback_progress) > 1
+    assert callback_progress[0][0] == 32768  # First chunk
+    assert callback_progress[-1][0] == 40000  # Total file size
+    assert all(x[1] == 40000 for x in callback_progress)
