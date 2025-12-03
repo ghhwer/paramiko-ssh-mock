@@ -9,8 +9,37 @@ For more detailed documentation, please visit our [Read the Docs](https://parami
 
 ## Installation
 
+### Using UV (Recommended)
+
+```bash
+# Install UV first (if you haven't already)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install the package
+uv add paramiko-mock
+
+# Or install from source
+uv sync
+```
+
+### Using pip
+
 ```bash
 pip install paramiko-mock
+```
+
+### Development Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ghhwer/paramiko-ssh-mock.git
+cd paramiko-ssh-mock
+
+# Install with UV (recommended)
+uv sync --dev
+
+# Or with pip
+pip install -e .
 ```
 
 ## Usage

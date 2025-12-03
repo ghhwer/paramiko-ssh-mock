@@ -1,2 +1,6 @@
+# This file is maintained for compatibility with tools that don't support pyproject.toml
+# For UV users, dependencies are defined in pyproject.toml
+# Install with: uv sync
+
+paramiko>=3.4.0
 pytest==8.2.0
-paramiko==3.4.0
