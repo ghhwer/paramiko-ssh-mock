@@ -3,6 +3,8 @@ name: Run Unit Tests
 on:
   push:
     branches: [ dev, 'feature/*', 'feat/*' ]
+  pull_request:
+    branches: [ main, dev ]
 
 jobs:
   test:
