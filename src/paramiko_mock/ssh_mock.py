@@ -5,6 +5,7 @@ from typing import Any, Callable, Union
 from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException
 from .sftp_mock import SFTPClientMock
 from .mocked_env import ParamikoMockEnviron, MockRemoteDevice
+from .stderr_mock import StderrMock
 
 
 class SSHClientMock():
@@ -122,7 +123,7 @@ class SSHResponseMock(ABC):
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[BytesIO, BytesIO, BytesIO]:
+    ) -> tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]:
         """
         A method that should be implemented by the subclasses.
         This method is called when the command is executed
@@ -131,7 +132,8 @@ class SSHResponseMock(ABC):
           command.
         - command: The command that is being executed.
 
-        Returns: A tuple of BytesIO objects.
+        Returns: A tuple of (stdin, stdout, stderr) where stderr can be a BytesIO
+                 or StderrMock with channel functionality.
         """
         pass
 
@@ -143,11 +145,12 @@ class SSHCommandMock(SSHResponseMock):
     return.
 
     When called the instance of this class will return a tuple of BytesIO
-    objects.
+    objects, where stderr is enhanced with channel functionality for exit status.
 
     - stdin: The stdin of the command.
     - stdout: The stdout of the command.
     - stderr: The stderr of the command.
+    - exit_status: The exit status code for the command (default: 0).
     """
 
     def __init__(
@@ -155,44 +158,72 @@ class SSHCommandMock(SSHResponseMock):
         stdin: Union[str, BytesIO],
         stdout: Union[str, BytesIO],
         stderr: Union[str, BytesIO],
-        str_encoding="utf-8"
+        str_encoding="utf-8",
+        exit_status: int = 0
     ) -> None:
         if isinstance(stdin, str):
             stdin = BytesIO(stdin.encode(str_encoding))
         if isinstance(stdout, str):
             stdout = BytesIO(stdout.encode(str_encoding))
         if isinstance(stderr, str):
-            stderr = BytesIO(stderr.encode(str_encoding))
-        self.stdin: str = stdin
-        self.stdout: str = stdout
-        self.stderr: str = stderr
+            stderr_bytes = stderr.encode(str_encoding)
+        elif isinstance(stderr, BytesIO):
+            stderr_bytes = stderr.getvalue()
+        else:
+            stderr_bytes = stderr
+        
+        self.stdin: BytesIO = stdin
+        self.stdout: BytesIO = stdout
+        self.stderr: StderrMock = StderrMock(stderr_bytes, exit_status)
+        self.exit_status: int = exit_status
 
     def __call__(
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[BytesIO, BytesIO, BytesIO]:
+    ) -> tuple[BytesIO, BytesIO, StderrMock]:
         return self.stdin, self.stdout, self.stderr
 
     def append_to_stdout(self, new_stdout: str) -> None:
-        self.stdout += new_stdout
+        current_content = self.stdout.getvalue()
+        self.stdout = BytesIO(current_content + new_stdout.encode('utf-8'))
 
     def remove_line_containing(self, line: str) -> None:
-        self.stdout = '\n'.join(
-            [x for x in self.stdout.split('\n') if line not in x]
-        )
+        current_content = self.stdout.getvalue().decode('utf-8')
+        lines = current_content.split('\n')
+        filtered_lines = [x for x in lines if line not in x]
+        self.stdout = BytesIO('\n'.join(filtered_lines).encode('utf-8'))
+    
+    def set_exit_status(self, exit_status: int) -> None:
+        """
+        Set the exit status for this command.
+        
+        Args:
+            exit_status: The exit status code to set
+        """
+        self.exit_status = exit_status
+        self.stderr.set_exit_status(exit_status)
+    
+    def get_exit_status(self) -> int:
+        """
+        Get the current exit status.
+        
+        Returns:
+            The current exit status code
+        """
+        return self.exit_status
 
 
 class SSHCommandFunctionMock(SSHResponseMock):
     def __init__(
         self,
-        callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, BytesIO]]
+        callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]]
     ) -> None:
-        self.callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, BytesIO]] = callback
+        self.callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]] = callback
 
     def __call__(
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[BytesIO, BytesIO, BytesIO]:
+    ) -> tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]:
         return self.callback(ssh_client_mock, command)

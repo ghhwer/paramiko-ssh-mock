@@ -16,6 +16,8 @@ from .ssh_mock import (
     SSHCommandMock,
     SSHCommandFunctionMock
 )
+from .stderr_mock import StderrMock
+from .channel_mock import ChannelMock
 from .sftp_mock import (
     SFTPClientMock,
     SFTPFileMock
@@ -34,6 +36,8 @@ __all__ = [
     "SSHResponseMock",
     "SSHCommandMock",
     "SSHCommandFunctionMock",
+    "StderrMock",
+    "ChannelMock",
     "SFTPClientMock",
     "SFTPFileMock",
     "LocalFileMock",

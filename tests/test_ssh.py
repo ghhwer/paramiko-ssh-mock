@@ -575,3 +575,113 @@ def test_successful_authentication_after_failed_attempt():
         assert output2 == b'open files'
 
     ParamikoMockEnviron().cleanup_environment()
+
+
+def test_exit_status_functionality():
+    """
+    Test that the stderr object has channel with recv_exit_status() method.
+    This verifies that the mock now supports exit status like the real paramiko library.
+    """
+    # Set up a host with a command that has a specific exit status
+    ParamikoMockEnviron().add_responses_for_host('exit_status_host', 22, {
+        'failing_command': SSHCommandMock('', 'output', 'error message', exit_status=1),
+        'successful_command': SSHCommandMock('', 'success output', '', exit_status=0)
+    }, 'user', 'pass')
+
+    def execute_failing_command():
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect('exit_status_host', port=22, username='user', password='pass')
+        stdin, stdout, stderr = client.exec_command('failing_command')
+        return stdin, stdout, stderr
+
+    def execute_successful_command():
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect('exit_status_host', port=22, username='user', password='pass')
+        stdin, stdout, stderr = client.exec_command('successful_command')
+        return stdin, stdout, stderr
+
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        # Test failing command
+        stdin, stdout, stderr = execute_failing_command()
+        
+        # Verify stderr has channel attribute
+        assert hasattr(stderr, 'channel'), "stderr should have a channel attribute"
+        
+        # Verify channel has recv_exit_status method
+        assert hasattr(stderr.channel, 'recv_exit_status'), "channel should have recv_exit_status method"
+        
+        # Verify exit status is 1 for failing command
+        exit_status = stderr.channel.recv_exit_status()
+        assert exit_status == 1, f"Expected exit status 1, got {exit_status}"
+        
+        # Verify stderr still works as BytesIO
+        stderr_content = stderr.read()
+        assert stderr_content == b'error message', f"Expected 'error message', got {stderr_content}"
+        
+        # Test successful command
+        stdin, stdout, stderr = execute_successful_command()
+        exit_status = stderr.channel.recv_exit_status()
+        assert exit_status == 0, f"Expected exit status 0, got {exit_status}"
+
+    ParamikoMockEnviron().cleanup_environment()
+
+
+def test_exit_status_with_custom_function():
+    """
+    Test that custom command functions can also return exit status.
+    """
+    def custom_command_processor(
+        ssh_client_mock: SSHClientMock,
+        command: str
+    ):
+        # Parse the command and determine exit status based on content
+        if 'fail' in command:
+            exit_status = 1
+            stderr_content = 'Command failed'
+        else:
+            exit_status = 0
+            stderr_content = ''
+        
+        empty = ''.encode("utf-8")
+        stdout = 'custom output'.encode("utf-8")
+        stderr_bytes = stderr_content.encode("utf-8")
+        
+        # Use StderrMock to provide exit status
+        from src.paramiko_mock.stderr_mock import StderrMock
+        stderr = StderrMock(stderr_bytes, exit_status)
+        
+        return BytesIO(empty), BytesIO(stdout), stderr
+
+    # Set up a host with custom command processor
+    ParamikoMockEnviron().add_responses_for_host('custom_host', 22, {
+        r're(custom_command .*)': SSHCommandFunctionMock(
+            custom_command_processor
+        )
+    }, 'user', 'pass')
+
+    def execute_custom_command(command_str):
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect('custom_host', port=22, username='user', password='pass')
+        stdin, stdout, stderr = client.exec_command(command_str)
+        return stdin, stdout, stderr
+
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        # Test successful custom command
+        stdin, stdout, stderr = execute_custom_command('custom_command --param value')
+        exit_status = stderr.channel.recv_exit_status()
+        assert exit_status == 0, f"Expected exit status 0, got {exit_status}"
+        assert stdout.read() == b'custom output'
+        
+        # Test failing custom command
+        stdin, stdout, stderr = execute_custom_command('custom_command --fail')
+        exit_status = stderr.channel.recv_exit_status()
+        assert exit_status == 1, f"Expected exit status 1, got {exit_status}"
+        assert stderr.read() == b'Command failed'
+
+    ParamikoMockEnviron().cleanup_environment()
