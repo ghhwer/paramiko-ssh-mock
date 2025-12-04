@@ -23,10 +23,16 @@ def example_application_function_ssh():
         return output_1, output_2
 
 def test_example_application_function_ssh():
-        ParamikoMockEnviron().add_responses_for_host('myhost.example.ihf', 22, {
-                're(ls.*)': SSHCommandMock('', 'ls output', ''),
-                'docker ps': SSHCommandMock('', 'docker ps output', ''),
-        }, 'root', 'root')
+        ParamikoMockEnviron().add_responses_for_host(
+                host='myhost.example.ihf', 
+                port=22,
+                responses={
+                        're(ls.*)': SSHCommandMock('', 'ls output', ''),
+                        'docker ps': SSHCommandMock('', 'docker ps output', ''),
+                }, 
+                username='root', 
+                password='root'
+        )
 
         with patch('paramiko.SSHClient', new=SSHClientMock):
                 output_1, output_2 = example_application_function_ssh()
