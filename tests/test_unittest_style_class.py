@@ -1,7 +1,7 @@
 import unittest
 import pytest
 from unittest.mock import patch
-from src.ParamikoMock import (
+from src.paramiko_mock import (
     SSHClientMock, ParamikoMockEnviron, SSHCommandMock
 )
 import paramiko

@@ -1,4 +1,4 @@
-from src.ParamikoMock import (
+from src.paramiko_mock import (
     SSHCommandMock, ParamikoMockEnviron,
     LocalFileMock, SSHClientMock, SFTPFileMock
 )

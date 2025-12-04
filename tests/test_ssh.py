@@ -1,7 +1,7 @@
 import paramiko
 from io import StringIO
-from src.ParamikoMock.mocked_env import ParamikoMockEnviron
-from src.ParamikoMock.ssh_mock import (
+from src.paramiko_mock.mocked_env import ParamikoMockEnviron
+from src.paramiko_mock.ssh_mock import (
     SSHClientMock, SSHCommandMock, SSHCommandFunctionMock, SSHResponseMock
 )
 from unittest.mock import patch

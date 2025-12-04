@@ -45,7 +45,7 @@ Repository = "https://github.com/ghhwer/paramiko-ssh-mock.git"
 Issues = "https://github.com/ghhwer/paramiko-ssh-mock/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ParamikoMock"]
+packages = ["src/paramiko_mock"]
 
 [tool.hatch.build]
 exclude = [

@@ -1,10 +1,10 @@
 import paramiko
-from src.ParamikoMock.mocked_env import ParamikoMockEnviron
-from src.ParamikoMock.ssh_mock import SSHClientMock
-from src.ParamikoMock.sftp_mock import (
+from src.paramiko_mock.mocked_env import ParamikoMockEnviron
+from src.paramiko_mock.ssh_mock import SSHClientMock
+from src.paramiko_mock.sftp_mock import (
     SFTPFileSystem, SFTPClientMock, SFTPFileMock
 )
-from src.ParamikoMock.local_filesystem_mock import (
+from src.paramiko_mock.local_filesystem_mock import (
     LocalFilesystemMock, LocalFileMock
 )
 from unittest.mock import patch

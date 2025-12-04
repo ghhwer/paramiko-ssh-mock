@@ -25,7 +25,7 @@ This will allow you to use the `paramiko.SSHClient` class as you normally would,
 When using patching you need to ensure that the host is defined in the `ParamikoMockEnviron` class before calling your application code.
 
 ```python
-from ParamikoMock import (
+from paramiko_mock import (
         SSHCommandMock, ParamikoMockEnviron,
         SSHClientMock
 )
@@ -79,7 +79,7 @@ You can also setup a test case that extends `unittest.TestCase` and uses the `Pa
 import unittest
 import pytest
 from unittest.mock import patch
-from src.ParamikoMock import (SSHClientMock, ParamikoMockEnviron, SSHCommandMock)
+from src.paramiko_mock import (SSHClientMock, ParamikoMockEnviron, SSHCommandMock)
 import paramiko
 
 def my_application_code():
@@ -123,7 +123,7 @@ You can either use `SSHCommandMock` to define the output of a command or define 
 
 Use the `SSHCommandMock` class to define the output of a command:
 ```python
-from ParamikoMock import ParamikoMockEnviron, SSHCommandMock
+from paramiko_mock import ParamikoMockEnviron, SSHCommandMock
 # ...
 # Setup the environment for SSH operations
 ParamikoMockEnviron().add_responses_for_host('myhost.example.ihf', 22, {
@@ -135,7 +135,7 @@ ParamikoMockEnviron().add_responses_for_host('myhost.example.ihf', 22, {
 
 Implementing a custom class that extends `SSHResponseMock`:
 ```python
-from ParamikoMock import SSHResponseMock, ParamikoMockEnviron, SSHClientMock
+from paramiko_mock import SSHResponseMock, ParamikoMockEnviron, SSHClientMock
 from io import StringIO
 
 # ...

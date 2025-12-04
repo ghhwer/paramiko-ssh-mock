@@ -63,7 +63,7 @@ flowchart TD
     style s1 stroke:#000000,fill:#FFFFFF
 ```
 
-Api documentation can be found in the [API Reference](/autoapi/ParamikoMock/) page.
+Api documentation can be found in the [API Reference](/autoapi/paramiko_mock/) page.
 The full implementation can be found in the [GitHub Repository](https://github.com/ghhwer/paramiko-ssh-mock)
 
 ## Quick Start
@@ -79,7 +79,7 @@ pip install paramiko-mock
 Here is a sample script that demonstrates how to use ParamikoMock for SSH commands:
 
 ```python
-from ParamikoMock import (
+from paramiko_mock import (
         SSHCommandMock, ParamikoMockEnviron,
         SSHClientMock
 )
@@ -124,7 +124,7 @@ def test_example_application_function_ssh():
 Here is a sample script that demonstrates how to use ParamikoMock for SFTP operations:
 
 ```python
-from ParamikoMock import (
+from paramiko_mock import (
     SSHCommandMock, ParamikoMockEnviron,
     LocalFileMock, SSHClientMock, SFTPFileMock
 )
