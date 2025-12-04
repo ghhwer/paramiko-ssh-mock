@@ -1,6 +1,7 @@
 import time
 import os
 from pathlib import Path
+from typing import Any, Callable, Union
 from paramiko import SFTPAttributes
 from .local_filesystem_mock import LocalFileMock, LocalFilesystemMock
 from .exceptions import BadSetupError
@@ -14,34 +15,34 @@ class SFTPFileSystem():
     """
     file_system: dict[str, "SFTPFileMock"] = {}
 
-    def add_file(self, path, content):
+    def add_file(self, path: str, content: "SFTPFileMock") -> None:
         self.file_system[path] = content
 
-    def get_file(self, path):
+    def get_file(self, path: str) -> Union["SFTPFileMock", None]:
         return self.file_system.get(path)
 
-    def remove_file(self, path):
+    def remove_file(self, path: str) -> None:
         self.file_system.pop(path, None)
 
-    def list_files(self):
-        return self.file_system.keys()
+    def list_files(self) -> list[str]:
+        return list(self.file_system.keys())
 
 
 class SFTPFileMock():
     """
     This class mocks a file in the remote filesystem.
     """
-    write_history = []
-    file_content = None
+    write_history: list[Any] = []
+    file_content: Any = None
 
-    def close(self):
+    def close(self) -> None:
         pass
 
-    def write(self, data):
+    def write(self, data: Any) -> None:
         self.write_history.append(data)
         self.file_content = data
 
-    def read(self, size=None):
+    def read(self, size: Union[int, None] = None) -> Any:
         return self.file_content
 
 
@@ -53,35 +54,35 @@ class SFTPClientMock():
 
     def __init__(
         self,
-        file_system: SFTPFileSystem = None,
-        local_filesystem: LocalFilesystemMock = None
-    ):
+        file_system: Union[SFTPFileSystem, None] = None,
+        local_filesystem: Union[LocalFilesystemMock, None] = None
+    ) -> None:
         if file_system is None:
             raise BadSetupError("file_system is required")
         if local_filesystem is None:
             raise BadSetupError("local_filesystem is required")
-        self.__remote_file_system__ = file_system
-        self.__local_filesystem__ = local_filesystem
+        self.__remote_file_system__: SFTPFileSystem = file_system
+        self.__local_filesystem__: LocalFilesystemMock = local_filesystem
 
-    def open(self, filename, mode="r", bufsize=-1):
+    def open(self, filename: str, mode: str = "r", bufsize: int = -1) -> "SFTPFileMock":
         file = self.__remote_file_system__.get_file(filename)
         if file is None:
             file = SFTPFileMock()
             self.__remote_file_system__.add_file(filename, file)
         return file
 
-    def close(self):
+    def close(self) -> None:
         pass
 
     def put(
         self,
-        localpath,
-        remotepath,
-        callback=None,
-        prefetch=True,
-        max_concurrent_prefetch_requests=None,
-        confirm=True
-    ):
+        localpath: str,
+        remotepath: str,
+        callback: Union[Callable[[int, int], None], None] = None,
+        prefetch: bool = True,
+        max_concurrent_prefetch_requests: Union[int, None] = None,
+        confirm: bool = True
+    ) -> SFTPAttributes:
         mock_local_file = self.__local_filesystem__.get_file(localpath)
         if mock_local_file is None:
             raise FileNotFoundError(f"File not found: {localpath}")
@@ -127,12 +128,12 @@ class SFTPClientMock():
 
     def get(
         self,
-        remotepath,
-        localpath,
-        callback=None,
-        prefetch=True,
-        max_concurrent_prefetch_requests=None
-    ):
+        remotepath: str,
+        localpath: str,
+        callback: Union[Callable[[int, int], None], None] = None,
+        prefetch: bool = True,
+        max_concurrent_prefetch_requests: Union[int, None] = None
+    ) -> None:
         file = self.__remote_file_system__.get_file(remotepath)
         if file is None:
             raise FileNotFoundError(f"File not found: {remotepath}")
@@ -153,7 +154,7 @@ class SFTPClientMock():
             if callback:
                 callback(transferred, size)
 
-    def listdir(self, path="."):
+    def listdir(self, path: str = ".") -> list[str]:
         file_path = Path(path)
         file_list = [Path(x) for x in self.__remote_file_system__.list_files()]
         return [x.name for x in file_list if x.parent == file_path]

@@ -29,7 +29,7 @@ from .exceptions import BadSetupError
 
 __all__ = [
     "SSHClientMock",
-    "SSHResponseMock", 
+    "SSHResponseMock",
     "SSHCommandMock",
     "SSHCommandFunctionMock",
     "SFTPClientMock",

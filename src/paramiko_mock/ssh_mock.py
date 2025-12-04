@@ -1,9 +1,10 @@
 from abc import abstractmethod, ABC
 from io import StringIO
 import re
+from typing import Any, Callable, Union
 from paramiko.ssh_exception import BadHostKeyException, NoValidConnectionsError
 from .sftp_mock import SFTPClientMock
-from .mocked_env import ParamikoMockEnviron
+from .mocked_env import ParamikoMockEnviron, MockRemoteDevice
 
 
 class SSHClientMock():
@@ -12,14 +13,14 @@ class SSHClientMock():
     This class is intended to be patched in place of the paramiko.SSHClient class.
     """
 
-    def __init__(self, *args, **kwds):
-        self.device = None
-        self.sftp_client_mock = None
+    def __init__(self, *args: Any, **kwds: Any) -> None:
+        self.device: Union[MockRemoteDevice, None] = None
+        self.sftp_client_mock: Union[SFTPClientMock, None] = None
 
-    def set_missing_host_key_policy(self, policy):
+    def set_missing_host_key_policy(self, policy: Any) -> None:
         pass
 
-    def open_sftp(self):
+    def open_sftp(self) -> SFTPClientMock:
         if self.device is None:
             raise NoValidConnectionsError('No valid connection')
         if self.sftp_client_mock is None:
@@ -31,29 +32,29 @@ class SSHClientMock():
             )
         return self.sftp_client_mock
 
-    def set_log_channel(self, log_channel):
+    def set_log_channel(self, log_channel: str) -> None:
         pass
 
-    def get_host_keys(self):
+    def get_host_keys(self) -> None:
         pass
 
-    def save_host_keys(self, filename):
+    def save_host_keys(self, filename: str) -> None:
         pass
 
-    def load_host_keys(self, filename):
+    def load_host_keys(self, filename: str) -> None:
         pass
 
-    def load_system_host_keys(self, filename=None):
+    def load_system_host_keys(self, filename: Union[str, None] = None) -> None:
         pass
 
     def connect(
         self,
-        hostname,
-        port=22,
-        username=None,
-        password=None,
-        **kwargs
-    ):
+        hostname: str,
+        port: int = 22,
+        username: Union[str, None] = None,
+        password: Union[str, None] = None,
+        **kwargs: Any
+    ) -> None:
         self.selected_host = f'{hostname}:{port}'
         self.device = ParamikoMockEnviron()._get_remote_device(
             self.selected_host
@@ -65,12 +66,12 @@ class SSHClientMock():
 
     def exec_command(
         self,
-        command,
-        bufsize=-1,
-        timeout=None,
-        get_pty=False,
-        environment=None
-    ):
+        command: str,
+        bufsize: int = -1,
+        timeout: Union[int, None] = None,
+        get_pty: bool = False,
+        environment: Union[dict[str, str], None] = None
+    ) -> tuple[StringIO, StringIO, StringIO]:
         if self.selected_host is None:
             raise NoValidConnectionsError('No valid connections')
         self.device.add_command_to_history(command)
@@ -89,16 +90,16 @@ class SSHClientMock():
 
     def invoke_shell(
         self,
-        term='vt100',
-        width=80,
-        height=24,
-        width_pixels=0,
-        height_pixels=0,
-        environment=None
-    ):
+        term: str = 'vt100',
+        width: int = 80,
+        height: int = 24,
+        width_pixels: int = 0,
+        height_pixels: int = 0,
+        environment: Union[dict[str, str], None] = None
+    ) -> None:
         pass
 
-    def close(self):
+    def close(self) -> None:
         self.device = None
 
 
@@ -142,10 +143,10 @@ class SSHCommandMock(SSHResponseMock):
     - stderr: The stderr of the command.
     """
 
-    def __init__(self, stdin, stdout, stderr):
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
+    def __init__(self, stdin: str, stdout: str, stderr: str) -> None:
+        self.stdin: str = stdin
+        self.stdout: str = stdout
+        self.stderr: str = stderr
 
     def __call__(
         self,
@@ -154,18 +155,21 @@ class SSHCommandMock(SSHResponseMock):
     ) -> tuple[StringIO, StringIO, StringIO]:
         return StringIO(self.stdin), StringIO(self.stdout), StringIO(self.stderr)
 
-    def append_to_stdout(self, new_stdout):
+    def append_to_stdout(self, new_stdout: str) -> None:
         self.stdout += new_stdout
 
-    def remove_line_containing(self, line):
+    def remove_line_containing(self, line: str) -> None:
         self.stdout = '\n'.join(
             [x for x in self.stdout.split('\n') if line not in x]
         )
 
 
 class SSHCommandFunctionMock(SSHResponseMock):
-    def __init__(self, callback):
-        self.callback = callback
+    def __init__(
+        self,
+        callback: Callable[[SSHClientMock, str], tuple[StringIO, StringIO, StringIO]]
+    ) -> None:
+        self.callback: Callable[[SSHClientMock, str], tuple[StringIO, StringIO, StringIO]] = callback
 
     def __call__(
         self,
