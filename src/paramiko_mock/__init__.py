@@ -24,7 +24,9 @@ from .local_filesystem_mock import (
     LocalFileMock,
     LocalFilesystemMock
 )
-from .mocked_env import ParamikoMockEnviron
+from .mocked_env import (
+    ParamikoMockEnviron
+)
 from .exceptions import BadSetupError
 
 __all__ = [

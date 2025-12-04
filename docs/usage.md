@@ -63,13 +63,167 @@ def test_example_application_function_ssh():
     ParamikoMockEnviron().assert_command_was_executed('myhost.example.ihf', 22, 'ls -l')
     ParamikoMockEnviron().assert_command_was_executed('myhost.example.ihf', 22, 'docker ps')
     # Cleanup the environment
-    ParamikoMockEnviron().cleanup_environment()
+ParamikoMockEnviron().cleanup_environment()
 ```
 `add_responses_for_host` supports regular expressions for the command to be executed. These will be matched against the command that is executed.
 
 The `SSHCommandMock` class is used to define the output of the command.
 
 `ParamikoMockEnviron().cleanup_environment()` is recommended to be called after each test to ensure that the environment is cleaned up.
+
+## Testing Connection Failures
+
+ParamikoMock now supports testing various connection failure scenarios, similar to how the `responses` library works for HTTP mocking. This allows you to test how your application handles different types of connection problems.
+
+### Using Convenience Methods
+
+The `ParamikoMockEnviron` class provides convenience methods for setting up common failure scenarios:
+
+```python
+from paramiko_mock import ParamikoMockEnviron
+from unittest.mock import patch
+import paramiko
+import socket
+
+def test_dns_failure():
+    # Set up DNS resolution failure
+    ParamikoMockEnviron().setup_dns_failure('unreachable_host')
+    
+    def connect_function():
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect('unreachable_host', port=22)
+        return client
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        with pytest.raises(socket.gaierror) as exc_info:
+            connect_function()
+        assert 'Name or service not known' in str(exc_info.value)
+    
+    ParamikoMockEnviron().cleanup_environment()
+
+def test_timeout_failure():
+    # Set up connection timeout
+    ParamikoMockEnviron().setup_timeout_failure('slow_host')
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        with pytest.raises(TimeoutError):
+            connect_function()
+    
+    ParamikoMockEnviron().cleanup_environment()
+
+def test_authentication_failure():
+    # Set up authentication failure
+    ParamikoMockEnviron().setup_authentication_failure('secure_host')
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        with pytest.raises(paramiko.ssh_exception.AuthenticationException):
+            connect_function()
+    
+    ParamikoMockEnviron().cleanup_environment()
+
+def test_connection_refused():
+    # Set up connection refused
+    ParamikoMockEnviron().setup_connection_refused('busy_host')
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        with pytest.raises(ConnectionRefusedError):
+            connect_function()
+    
+    ParamikoMockEnviron().cleanup_environment()
+```
+
+### Using Custom Failures
+
+You can also set up custom exceptions for specific scenarios:
+
+```python
+def test_custom_failure():
+    # Set up a custom exception
+    custom_exception = ValueError("Custom SSH error")
+    ParamikoMockEnviron().setup_custom_failure('custom_host', 22, custom_exception)
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        with pytest.raises(ValueError) as exc_info:
+            connect_function()
+        assert 'Custom SSH error' in str(exc_info.value)
+    
+    ParamikoMockEnviron().cleanup_environment()
+```
+
+### Using ConnectionFailureConfig Directly
+
+For more control, you can use the `ConnectionFailureConfig` class directly:
+
+```python
+from paramiko_mock.exceptions import ConnectionFailureConfig
+
+def test_direct_failure_config():
+    # Set up failure using the direct method
+    ParamikoMockEnviron().add_responses_for_host(
+        'direct_fail_host', 22, {},
+        connection_failure=ConnectionFailureConfig.dns_failure('test.example.com')
+    )
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        with pytest.raises(socket.gaierror) as exc_info:
+            connect_function()
+        assert 'test.example.com' in str(exc_info.value)
+    
+    ParamikoMockEnviron().cleanup_environment()
+```
+
+### Available Failure Types
+
+The following failure types are available:
+
+- **DNS Failure**: `socket.gaierror(-2, "Name or service not known: {hostname}")`
+- **Timeout**: `TimeoutError("timed out")`
+- **Authentication**: `paramiko.ssh_exception.AuthenticationException("Authentication failed")`
+- **Connection Refused**: `ConnectionRefusedError("Connection refused")`
+- **Custom**: Any exception you provide
+
+### Mixing Success and Failure Scenarios
+
+You can set up different hosts with different behaviors in the same test:
+
+```python
+def test_mixed_scenarios():
+    # Set up a successful host
+    ParamikoMockEnviron().add_responses_for_host('good_host', 22, {
+        'ls': SSHCommandMock('', 'success', '')
+    }, 'user', 'pass')
+    
+    # Set up a failing host
+    ParamikoMockEnviron().setup_dns_failure('bad_host')
+    
+    def connect_to_good_host():
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect('good_host', port=22, username='user', password='pass')
+        stdin, stdout, stderr = client.exec_command('ls')
+        return stdout.read()
+    
+    def connect_to_bad_host():
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect('bad_host', port=22)
+        return client
+    
+    with patch('paramiko.SSHClient', new=SSHClientMock):
+        # Good host should work
+        output = connect_to_good_host()
+        assert output == b'success'
+        
+        # Bad host should fail
+        with pytest.raises(socket.gaierror):
+            connect_to_bad_host()
+    
+    ParamikoMockEnviron().cleanup_environment()
+```
 
 ### Using it as a extended class of `unittest.TestCase`
 
@@ -136,7 +290,7 @@ ParamikoMockEnviron().add_responses_for_host('myhost.example.ihf', 22, {
 Implementing a custom class that extends `SSHResponseMock`:
 ```python
 from paramiko_mock import SSHResponseMock, ParamikoMockEnviron, SSHClientMock
-from io import StringIO
+from io import BytesIO
 
 # ...
 # Define a custom class that extends SSHResponseMock
@@ -145,12 +299,12 @@ class MyCustomSSHResponse(SSHResponseMock):
         pass
         # You can initialize any custom attributes here
     
-    def __call__(self, ssh_client_mock: SSHClientMock, command:str) -> tuple[StringIO, StringIO, StringIO]:
+    def __call__(self, ssh_client_mock: SSHClientMock, command:str) -> tuple[BytesIO, BytesIO, BytesIO]:
         # any custom logic here, you can use the command to determine the output 
         # or the ssh_client_mock to get information about the connection
         command_output = ssh_client_mock.device.host + ' ' + command
         # Output should be in the form of (stdin, stdout, stderr)
-        return StringIO(""), StringIO(command_output), StringIO("")
+        return BytesIO("".encode()), BytesIO(command_output.encode()), BytesIO("".encode())
 
 # Setup the environment for SSH operations
 ParamikoMockEnviron().add_responses_for_host('myhost.example.ihf', 22, {

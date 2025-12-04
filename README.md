@@ -1,10 +1,14 @@
-# ParamikoMock
+# Paramiko Mock
 
-ParamikoMock is a Python library for mocking the `paramiko` SSH client for testing purposes. It allows you to define responses for specific SSH commands and hosts, making it easier to test code that interacts with remote servers via SSH.
+Paramiko Mock is a Python library for mocking the `paramiko` SSH client for testing purposes. It allows you to define responses for specific SSH commands and hosts, making it easier to test code that interacts with remote servers via SSH.
+
+Like the project and want to help me continue to work on this?
+
+<iframe src="https://github.com/sponsors/ghhwer/button" title="Sponsor ghhwer" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
 
 ## Version 2.0.0 🚀
 
-We are excited to announce that ParamikoMock has reached version 2.0.0! 🎉
+We are excited to announce that Paramiko Mock has reached version 2.0.0! 🎉
 For more detailed documentation, please visit our [Read the Docs](https://paramiko-ssh-mock.readthedocs.io/en/latest/) page.
 
 ## Installation
@@ -44,14 +48,15 @@ pip install -e .
 
 ## Usage
 
-Here are some examples of how to use ParamikoMock:
+Here are some examples of how to use paramiko_mock:
+Advanced usage is available [here](https://paramiko-ssh-mock.readthedocs.io/en/latest/usage/)
 
 #### Example 1: Mocking SSH Commands
 
-Here is a sample script that demonstrates how to use ParamikoMock for SSH commands:
+Here is a sample script that demonstrates how to use paramiko_mock for SSH commands:
 
 ```python
-from ParamikoMock import (
+from paramiko_mock import (
         SSHCommandMock, ParamikoMockEnviron,
         SSHClientMock
 )
@@ -96,7 +101,7 @@ def test_example_application_function_ssh():
 Here is a sample script that demonstrates how to use ParamikoMock for SFTP operations:
 
 ```python
-from ParamikoMock import (
+from paramiko_mock import (
     SSHCommandMock, ParamikoMockEnviron,
     LocalFileMock, SSHClientMock, SFTPFileMock
 )

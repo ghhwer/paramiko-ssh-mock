@@ -28,6 +28,11 @@ By participating in this project you agree to abide by its terms.
 
 If you have any concerns or questions about the code of conduct, please raise them with the project maintainers.
 
+---
+
+Like the project and want to help me continue to work on this and prioritize your issues?
+<iframe src="https://github.com/sponsors/ghhwer/button" title="Sponsor ghhwer" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+
 ## License
 
 MIT License

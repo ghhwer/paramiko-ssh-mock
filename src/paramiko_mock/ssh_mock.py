@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from io import BytesIO
 import re
 from typing import Any, Callable, Union
-from paramiko.ssh_exception import BadHostKeyException, NoValidConnectionsError
+from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException
 from .sftp_mock import SFTPClientMock
 from .mocked_env import ParamikoMockEnviron, MockRemoteDevice
 
@@ -56,11 +56,18 @@ class SSHClientMock():
         **kwargs: Any
     ) -> None:
         self.selected_host = f'{hostname}:{port}'
-        self.device = ParamikoMockEnviron()._get_remote_device(
+        self.device = ParamikoMockEnviron().get_remote_device(
             self.selected_host
         )
+
+        # Check for connection failure configuration
+        if self.device.connection_failure is not None:
+            raise self.device.connection_failure
+
+        # Check authentication
         if self.device.authenticate(username, password) is False:
-            raise BadHostKeyException(hostname, None, 'Invalid credentials')
+            raise AuthenticationException()
+
         self.last_connect_kwargs = kwargs
         self.device.clear()
 

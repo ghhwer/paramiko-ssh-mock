@@ -63,6 +63,7 @@ python_functions = ["test_*"]
 
 [dependency-groups]
 dev = [
+    "coverage>=7.10.7",
     "flake8>=7.3.0",
     "pytest>=8.2.0",
 ]
