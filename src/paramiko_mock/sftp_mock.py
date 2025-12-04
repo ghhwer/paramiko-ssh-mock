@@ -1,7 +1,7 @@
 import time
 import os
 from pathlib import Path
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional
 from paramiko import SFTPAttributes
 from .local_filesystem_mock import LocalFileMock, LocalFilesystemMock
 from .exceptions import BadSetupError
@@ -18,7 +18,7 @@ class SFTPFileSystem():
     def add_file(self, path: str, content: "SFTPFileMock") -> None:
         self.file_system[path] = content
 
-    def get_file(self, path: str) -> Union["SFTPFileMock", None]:
+    def get_file(self, path: str) -> Optional["SFTPFileMock"]:
         return self.file_system.get(path)
 
     def remove_file(self, path: str) -> None:
@@ -42,7 +42,7 @@ class SFTPFileMock():
         self.write_history.append(data)
         self.file_content = data
 
-    def read(self, size: Union[int, None] = None) -> Any:
+    def read(self, size: int | None = None) -> Any:
         return self.file_content
 
 
@@ -54,8 +54,8 @@ class SFTPClientMock():
 
     def __init__(
         self,
-        file_system: Union[SFTPFileSystem, None] = None,
-        local_filesystem: Union[LocalFilesystemMock, None] = None
+        file_system: SFTPFileSystem | None = None,
+        local_filesystem: LocalFilesystemMock | None = None
     ) -> None:
         if file_system is None:
             raise BadSetupError("file_system is required")
@@ -78,9 +78,9 @@ class SFTPClientMock():
         self,
         localpath: str,
         remotepath: str,
-        callback: Union[Callable[[int, int], None], None] = None,
+        callback: Callable[[int, int], None] | None = None,
         prefetch: bool = True,
-        max_concurrent_prefetch_requests: Union[int, None] = None,
+        max_concurrent_prefetch_requests: int | None = None,
         confirm: bool = True
     ) -> SFTPAttributes:
         mock_local_file = self.__local_filesystem__.get_file(localpath)
@@ -130,9 +130,9 @@ class SFTPClientMock():
         self,
         remotepath: str,
         localpath: str,
-        callback: Union[Callable[[int, int], None], None] = None,
+        callback: Callable[[int, int], None] | None = None,
         prefetch: bool = True,
-        max_concurrent_prefetch_requests: Union[int, None] = None
+        max_concurrent_prefetch_requests: int | None = None
     ) -> None:
         file = self.__remote_file_system__.get_file(remotepath)
         if file is None:

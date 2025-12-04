@@ -11,7 +11,7 @@ from paramiko.pkey import PKey
 from paramiko.ssh_exception import AuthenticationException
 
 # Import only for type hinting
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ssh_mock import SSHResponseMock
@@ -48,8 +48,8 @@ class ConnectionFailureConfig:
     @staticmethod
     def bad_host_exception(
         hostname: str = None,
-        custom_got_key: Union[PKey, None] = None,
-        custom_pkey: Union[PKey, None] = None
+        custom_got_key: PKey | None = None,
+        custom_pkey: PKey | None = None
     ):
         if hostname is None:
             hostname = "unknown_host"
@@ -78,19 +78,19 @@ class MockRemoteDevice:
         port: int,
         responses: dict[str, 'SSHResponseMock'],
         local_filesystem: LocalFilesystemMock,
-        username: Union[str, None] = None,
-        password: Union[str, None] = None,
-        connection_failure: Union[Exception, None] = None
+        username: str | None = None,
+        password: str | None = None,
+        connection_failure: Exception | None = None
     ) -> None:
         self.host: str = host
         self.port: int = port
         self.responses: dict[str, 'SSHResponseMock'] = responses
-        self.username: Union[str, None] = username
-        self.password: Union[str, None] = password
+        self.username: str | None = username
+        self.password: str | None = password
         self.filesystem: SFTPFileSystem = SFTPFileSystem()
         self.local_filesystem: LocalFilesystemMock = local_filesystem
         self.command_history: list[str] = []
-        self.connection_failure: Union[Exception, None] = connection_failure
+        self.connection_failure: Exception | None = connection_failure
 
     def authenticate(self, username: str, password: str) -> bool:
         if self.username is None and self.password is None:
@@ -144,9 +144,9 @@ class ParamikoMockEnviron(metaclass=SingletonMeta):
         host: str,
         port: int,
         responses: dict[str, 'SSHResponseMock'],
-        username: Union[str, None] = None,
-        password: Union[str, None] = None,
-        connection_failure: Union[Exception, None] = None
+        username: str | None = None,
+        password: str | None = None,
+        connection_failure: Exception | None = None
     ) -> None:
         """
         `add_responses_for_host` is a method that adds responses for a remote
@@ -370,8 +370,8 @@ class ParamikoMockEnviron(metaclass=SingletonMeta):
         self,
         host: str,
         port: int,
-        custom_got_key: Union[PKey, None] = None,
-        custom_pkey: Union[PKey, None] = None
+        custom_got_key: PKey | None = None,
+        custom_pkey: PKey | None = None
     ) -> None:
         """
         Set up a custom exception failure for a host.

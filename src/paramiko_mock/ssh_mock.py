@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from io import BytesIO
 import re
-from typing import Any, Callable, Union
+from typing import Any, Callable
 from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException
 from .sftp_mock import SFTPClientMock
 from .mocked_env import ParamikoMockEnviron, MockRemoteDevice
@@ -15,8 +15,8 @@ class SSHClientMock():
     """
 
     def __init__(self, *args: Any, **kwds: Any) -> None:
-        self.device: Union[MockRemoteDevice, None] = None
-        self.sftp_client_mock: Union[SFTPClientMock, None] = None
+        self.device: MockRemoteDevice | None = None
+        self.sftp_client_mock: SFTPClientMock | None = None
 
     def set_missing_host_key_policy(self, policy: Any) -> None:
         pass
@@ -45,15 +45,15 @@ class SSHClientMock():
     def load_host_keys(self, filename: str) -> None:
         pass
 
-    def load_system_host_keys(self, filename: Union[str, None] = None) -> None:
+    def load_system_host_keys(self, filename: str | None = None) -> None:
         pass
 
     def connect(
         self,
         hostname: str,
         port: int = 22,
-        username: Union[str, None] = None,
-        password: Union[str, None] = None,
+        username: str | None = None,
+        password: str | None = None,
         **kwargs: Any
     ) -> None:
         self.selected_host = f'{hostname}:{port}'
@@ -76,9 +76,9 @@ class SSHClientMock():
         self,
         command: str,
         bufsize: int = -1,
-        timeout: Union[int, None] = None,
+        timeout: int | None = None,
         get_pty: bool = False,
-        environment: Union[dict[str, str], None] = None
+        environment: dict[str, str] | None = None
     ) -> tuple[BytesIO, BytesIO, BytesIO]:
         if self.selected_host is None:
             raise NoValidConnectionsError('No valid connections')
@@ -103,7 +103,7 @@ class SSHClientMock():
         height: int = 24,
         width_pixels: int = 0,
         height_pixels: int = 0,
-        environment: Union[dict[str, str], None] = None
+        environment: dict[str, str] | None = None
     ) -> None:
         pass
 
@@ -123,7 +123,7 @@ class SSHResponseMock(ABC):
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]:
+    ) -> tuple[BytesIO, BytesIO, BytesIO | StderrMock]:
         """
         A method that should be implemented by the subclasses.
         This method is called when the command is executed
@@ -155,9 +155,9 @@ class SSHCommandMock(SSHResponseMock):
 
     def __init__(
         self,
-        stdin: Union[str, BytesIO],
-        stdout: Union[str, BytesIO],
-        stderr: Union[str, BytesIO],
+        stdin: str | BytesIO,
+        stdout: str | BytesIO,
+        stderr: str | BytesIO,
         str_encoding="utf-8",
         exit_status: int = 0
     ) -> None:
@@ -217,13 +217,13 @@ class SSHCommandMock(SSHResponseMock):
 class SSHCommandFunctionMock(SSHResponseMock):
     def __init__(
         self,
-        callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]]
+        callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, BytesIO | StderrMock]]
     ) -> None:
-        self.callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]] = callback
+        self.callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, BytesIO | StderrMock]] = callback
 
     def __call__(
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[BytesIO, BytesIO, Union[BytesIO, StderrMock]]:
+    ) -> tuple[BytesIO, BytesIO, BytesIO | StderrMock]:
         return self.callback(ssh_client_mock, command)

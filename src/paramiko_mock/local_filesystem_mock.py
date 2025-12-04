@@ -2,7 +2,7 @@
 This submodule implements the LocalFilesystemMock and LocalFileMock classes.
 """
 
-from typing import Any, Union
+from typing import Any
 
 
 class LocalFileMock():
@@ -26,12 +26,12 @@ class LocalFilesystemMock():
     LocalFilesystemMock is a class that stores the mocked local filesystem.
     __This is mainly an internal class and should not be used directly.__
     """
-    file_system: dict[str, "LocalFileMock"] = {}
+    file_system: dict[str, LocalFileMock] = {}
 
-    def add_file(self, path: str, file_mock: "LocalFileMock") -> None:
+    def add_file(self, path: str, file_mock: LocalFileMock) -> None:
         self.file_system[path] = file_mock
 
-    def get_file(self, path: str) -> Union["LocalFileMock", None]:
+    def get_file(self, path: str) -> LocalFileMock | None:
         return self.file_system.get(path)
 
     def remove_file(self, path: str) -> None:
