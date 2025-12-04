@@ -3,7 +3,12 @@ theme:
   name: material
 nav:
   - Home: index.md
-  - Usage: usage.md
+  - Usage:
+      - Overview: usage/index.md
+      - Basic SSH: usage/basic-ssh.md
+      - Exit Status: usage/exit-status.md
+      - Connection Failures: usage/connection-failures.md
+      - Extending Paramiko Mock: usage/advanced-usage.md
   - Contributing: contributing.md
 plugins:
   - search
