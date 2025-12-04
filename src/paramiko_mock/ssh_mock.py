@@ -124,7 +124,7 @@ class SSHResponseMock(ABC):
           command.
         - command: The command that is being executed.
 
-        Returns: A tuple of StringIO objects.
+        Returns: A tuple of BytesIO objects.
         """
         pass
 
@@ -135,7 +135,7 @@ class SSHCommandMock(SSHResponseMock):
     It's constructed with the stdin, stdout, and stderr that the command will
     return.
 
-    When called the instance of this class will return a tuple of StringIO
+    When called the instance of this class will return a tuple of BytesIO
     objects.
 
     - stdin: The stdin of the command.
