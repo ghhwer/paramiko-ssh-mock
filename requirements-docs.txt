@@ -1,3 +1,7 @@
+# This file is maintained for compatibility with tools that don't support pyproject.toml
+# For UV users, documentation dependencies are defined in pyproject.toml under [project.optional-dependencies.docs]
+# Install with: uv sync --extra docs
+
 mkdocs-material==9.6.7
 mkdocs-autoapi==0.4.0
 mkdocstrings[python]==0.29.0

@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "paramiko-mock"
+version = "2.0.0"
+description = "Mock for paramiko library"
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+authors = [
+    {name = "Caio Cominato", email = "caiopetrellicominato@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "paramiko>=3.4.0"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest==8.2.0"
+]
+docs = [
+    "mkdocs-material==9.6.7",
+    "mkdocs-autoapi==0.4.0",
+    "mkdocstrings[python]==0.29.0"
+]
+dev = [
+    "paramiko-mock[test,docs]"
+]
+
+[project.urls]
+Homepage = "https://github.com/ghhwer/paramiko-ssh-mock"
+Repository = "https://github.com/ghhwer/paramiko-ssh-mock.git"
+Issues = "https://github.com/ghhwer/paramiko-ssh-mock/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/paramiko_mock"]
+
+[tool.hatch.build]
+exclude = [
+    "/.github",
+    "/docs",
+    "/tests",
+    "*.md",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.10.7",
+    "flake8>=7.3.0",
+    "pytest>=8.2.0",
+]
