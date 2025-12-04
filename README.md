@@ -51,8 +51,6 @@ Here are some examples of how to use paramiko_mock:
 
 Advanced usage is available [here](https://paramiko-ssh-mock.readthedocs.io/en/latest/usage/) and under the /examples folder.
 
-```
-
 ## Contributing
 
 Contributions are welcome. 
