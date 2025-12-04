@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "paramiko-mock"
-version = "1.0.2"
+version = "2.0.0"
 description = "Mock for paramiko library"
 readme = "README.md"
 license = {file = "LICENSE.txt"}
@@ -60,3 +60,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.3.0",
+    "pytest>=8.2.0",
+]
