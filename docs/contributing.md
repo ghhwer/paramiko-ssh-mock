@@ -31,7 +31,10 @@ If you have any concerns or questions about the code of conduct, please raise th
 ---
 
 Like the project and want to help me continue to work on this and prioritize your issues?
-<iframe src="https://github.com/sponsors/ghhwer/button" title="Sponsor ghhwer" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+
+<div>
+        <iframe src="https://github.com/sponsors/ghhwer/button" title="Sponsor ghhwer" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+</div>
 
 ## License
 
