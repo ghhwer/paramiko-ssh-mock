@@ -1,5 +1,5 @@
 import paramiko
-from io import StringIO
+from io import BytesIO
 from src.paramiko_mock.mocked_env import ParamikoMockEnviron
 from src.paramiko_mock.ssh_mock import (
     SSHClientMock, SSHCommandMock, SSHCommandFunctionMock, SSHResponseMock
@@ -80,7 +80,7 @@ def test_example_function_1():
     }, 'root', 'root')
     with patch('paramiko.SSHClient', new=SSHClientMock):
         output = example_function_1()
-        assert output == 'ls output'
+        assert output == b'ls output'
 
 
 def test_example_function_2():
@@ -90,7 +90,7 @@ def test_example_function_2():
     # patch the paramiko.SSHClient with the mock
     with patch('paramiko.SSHClient', new=SSHClientMock):
         output = example_function_2()
-        assert output == 'docker-ps-output'
+        assert output == 'docker-ps-output'.encode()
 
 
 def test_example_function_3():
@@ -101,7 +101,9 @@ def test_example_function_3():
     ):
         # Parse the command and do something with it
         if 'param1' in command and 'value1' in command:
-            return StringIO(''), StringIO('value1'), StringIO('')
+            empty = ''.encode("utf-8")
+            value = 'value1'.encode("utf-8")
+            return BytesIO(empty), BytesIO(value), BytesIO(empty)
 
     # You can use a regexp expresion to match the command with the custom
     # processor
@@ -113,7 +115,7 @@ def test_example_function_3():
     # patch the paramiko.SSHClient with the mock
     with patch('paramiko.SSHClient', new=SSHClientMock):
         output = example_function_3()
-        assert output == 'value1'
+        assert output == 'value1'.encode("utf-8")
     ParamikoMockEnviron().cleanup_environment()
 
 
@@ -151,12 +153,14 @@ class MyCustomSSHResponse(SSHResponseMock):
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[StringIO, StringIO, StringIO]:
+    ) -> tuple[BytesIO, BytesIO, BytesIO]:
         # any custom logic here, you can use the command to determine the output
         # or the ssh_client_mock to get information about the connection
         command_output = ssh_client_mock.device.host + ' ' + command
         # Output should be in the form of (stdin, stdout, stderr)
-        return StringIO(""), StringIO(command_output), StringIO("")
+        empty = "".encode()
+        command_output = command_output.encode()
+        return BytesIO(empty), BytesIO(command_output), BytesIO(empty)
 
 
 def test_custom_class():
@@ -165,5 +169,5 @@ def test_custom_class():
     }, 'root', 'root')
     with patch('paramiko.SSHClient', new=SSHClientMock):
         output = example_function_1()
-        assert output == 'some_host ls -l'
+        assert output == 'some_host ls -l'.encode()
     ParamikoMockEnviron().cleanup_environment()

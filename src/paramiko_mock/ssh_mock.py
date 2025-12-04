@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from io import StringIO
+from io import BytesIO
 import re
 from typing import Any, Callable, Union
 from paramiko.ssh_exception import BadHostKeyException, NoValidConnectionsError
@@ -71,7 +71,7 @@ class SSHClientMock():
         timeout: Union[int, None] = None,
         get_pty: bool = False,
         environment: Union[dict[str, str], None] = None
-    ) -> tuple[StringIO, StringIO, StringIO]:
+    ) -> tuple[BytesIO, BytesIO, BytesIO]:
         if self.selected_host is None:
             raise NoValidConnectionsError('No valid connections')
         self.device.add_command_to_history(command)
@@ -115,7 +115,7 @@ class SSHResponseMock(ABC):
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[StringIO, StringIO, StringIO]:
+    ) -> tuple[BytesIO, BytesIO, BytesIO]:
         """
         A method that should be implemented by the subclasses.
         This method is called when the command is executed
@@ -143,7 +143,19 @@ class SSHCommandMock(SSHResponseMock):
     - stderr: The stderr of the command.
     """
 
-    def __init__(self, stdin: str, stdout: str, stderr: str) -> None:
+    def __init__(
+        self,
+        stdin: Union[str, BytesIO],
+        stdout: Union[str, BytesIO],
+        stderr: Union[str, BytesIO],
+        str_encoding="utf-8"
+    ) -> None:
+        if isinstance(stdin, str):
+            stdin = BytesIO(stdin.encode(str_encoding))
+        if isinstance(stdout, str):
+            stdout = BytesIO(stdout.encode(str_encoding))
+        if isinstance(stderr, str):
+            stderr = BytesIO(stderr.encode(str_encoding))
         self.stdin: str = stdin
         self.stdout: str = stdout
         self.stderr: str = stderr
@@ -152,8 +164,8 @@ class SSHCommandMock(SSHResponseMock):
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[StringIO, StringIO, StringIO]:
-        return StringIO(self.stdin), StringIO(self.stdout), StringIO(self.stderr)
+    ) -> tuple[BytesIO, BytesIO, BytesIO]:
+        return self.stdin, self.stdout, self.stderr
 
     def append_to_stdout(self, new_stdout: str) -> None:
         self.stdout += new_stdout
@@ -167,13 +179,13 @@ class SSHCommandMock(SSHResponseMock):
 class SSHCommandFunctionMock(SSHResponseMock):
     def __init__(
         self,
-        callback: Callable[[SSHClientMock, str], tuple[StringIO, StringIO, StringIO]]
+        callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, BytesIO]]
     ) -> None:
-        self.callback: Callable[[SSHClientMock, str], tuple[StringIO, StringIO, StringIO]] = callback
+        self.callback: Callable[[SSHClientMock, str], tuple[BytesIO, BytesIO, BytesIO]] = callback
 
     def __call__(
         self,
         ssh_client_mock: SSHClientMock,
         command: str
-    ) -> tuple[StringIO, StringIO, StringIO]:
+    ) -> tuple[BytesIO, BytesIO, BytesIO]:
         return self.callback(ssh_client_mock, command)

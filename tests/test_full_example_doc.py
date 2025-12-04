@@ -34,8 +34,8 @@ def test_example_application_function_ssh():
 
     with patch('paramiko.SSHClient', new=SSHClientMock):
         output_1, output_2 = example_application_function_ssh()
-        assert output_1 == 'ls output'
-        assert output_2 == 'docker ps output'
+        assert output_1 == 'ls output'.encode("utf-8")
+        assert output_2 == 'docker ps output'.encode("utf-8")
         ParamikoMockEnviron().assert_command_was_executed(
             'myhost.example.ihf', 22, 'ls -l'
         )

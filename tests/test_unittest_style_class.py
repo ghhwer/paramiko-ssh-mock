@@ -38,4 +38,4 @@ class ParamikoMockTestCase(unittest.TestCase):
 
     def test_paramiko_mock(self):
         output = my_application_code()
-        assert output == 'ls -l output'
+        assert output == 'ls -l output'.encode()
