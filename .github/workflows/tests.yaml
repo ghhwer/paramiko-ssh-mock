@@ -2,7 +2,7 @@ name: Run Unit Tests
 
 on:
   push:
-    branches: [ dev, 'feature/*' ]
+    branches: [ dev, 'feature/*', 'feat/*' ]
 
 jobs:
   test:
