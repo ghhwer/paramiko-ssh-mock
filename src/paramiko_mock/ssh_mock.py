@@ -171,7 +171,7 @@ class SSHCommandMock(SSHResponseMock):
             stderr_bytes = stderr.getvalue()
         else:
             stderr_bytes = stderr
-        
+
         self.stdin: BytesIO = stdin
         self.stdout: BytesIO = stdout
         self.stderr: StderrMock = StderrMock(stderr_bytes, exit_status)
@@ -193,21 +193,21 @@ class SSHCommandMock(SSHResponseMock):
         lines = current_content.split('\n')
         filtered_lines = [x for x in lines if line not in x]
         self.stdout = BytesIO('\n'.join(filtered_lines).encode('utf-8'))
-    
+
     def set_exit_status(self, exit_status: int) -> None:
         """
         Set the exit status for this command.
-        
+
         Args:
             exit_status: The exit status code to set
         """
         self.exit_status = exit_status
         self.stderr.set_exit_status(exit_status)
-    
+
     def get_exit_status(self) -> int:
         """
         Get the current exit status.
-        
+
         Returns:
             The current exit status code
         """

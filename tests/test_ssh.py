@@ -607,21 +607,21 @@ def test_exit_status_functionality():
     with patch('paramiko.SSHClient', new=SSHClientMock):
         # Test failing command
         stdin, stdout, stderr = execute_failing_command()
-        
+
         # Verify stderr has channel attribute
         assert hasattr(stderr, 'channel'), "stderr should have a channel attribute"
-        
+
         # Verify channel has recv_exit_status method
         assert hasattr(stderr.channel, 'recv_exit_status'), "channel should have recv_exit_status method"
-        
+
         # Verify exit status is 1 for failing command
         exit_status = stderr.channel.recv_exit_status()
         assert exit_status == 1, f"Expected exit status 1, got {exit_status}"
-        
+
         # Verify stderr still works as BytesIO
         stderr_content = stderr.read()
         assert stderr_content == b'error message', f"Expected 'error message', got {stderr_content}"
-        
+
         # Test successful command
         stdin, stdout, stderr = execute_successful_command()
         exit_status = stderr.channel.recv_exit_status()
@@ -645,15 +645,15 @@ def test_exit_status_with_custom_function():
         else:
             exit_status = 0
             stderr_content = ''
-        
+
         empty = ''.encode("utf-8")
         stdout = 'custom output'.encode("utf-8")
         stderr_bytes = stderr_content.encode("utf-8")
-        
+
         # Use StderrMock to provide exit status
         from src.paramiko_mock.stderr_mock import StderrMock
         stderr = StderrMock(stderr_bytes, exit_status)
-        
+
         return BytesIO(empty), BytesIO(stdout), stderr
 
     # Set up a host with custom command processor
@@ -677,7 +677,7 @@ def test_exit_status_with_custom_function():
         exit_status = stderr.channel.recv_exit_status()
         assert exit_status == 0, f"Expected exit status 0, got {exit_status}"
         assert stdout.read() == b'custom output'
-        
+
         # Test failing custom command
         stdin, stdout, stderr = execute_custom_command('custom_command --fail')
         exit_status = stderr.channel.recv_exit_status()
