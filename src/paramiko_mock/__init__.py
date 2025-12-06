@@ -8,7 +8,7 @@ to be used directly without the public interfaces.
 We cannot guarantee that the internal classes will not change in minor release
 so proceed with caution when using them.
 """
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 from .ssh_mock import (
     SSHClientMock,
